@@ -4,7 +4,7 @@ library(tidyverse)
 library(ggplot2)
 library(cowplot)
 
-UV_ORCC <- readRDS("/users/radha/Documents/Blackman Lab/Scripts/ORCC_UV_full.rds")
+UV_ORCC <- readRDS("/users/radha/Documents/blackman_lab/ORCC_UV_full.rds")
 #ORCC_env <- read.csv("/users/radha/Documents/Blackman Lab/data/bcbcm327_7099_PCG.csv")
 
 UV_ORCC %>%

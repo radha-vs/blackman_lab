@@ -10,7 +10,7 @@ library(ggplot2)
 #Load environmental & UVB data 
 ORCC_env <- read.csv("/users/radha/Documents/Blackman Lab/data/Environmental Data/bcbcm327_7099_PCG.csv")
 CCGP_UVB <- read.csv("/users/radha/Documents/Blackman Lab/data/Environmental Data/ClimateNA_data_puv_12292021.csv")
-UV_ORCC <- readRDS("/users/radha/Documents/Blackman Lab/Scripts/ORCC_UV_full.rds")
+UV_ORCC <- readRDS("/users/radha/Documents/blackman_lab/ORCC_UV_full.rds")
 UVB_data <- raster("/users/radha/Downloads/56459_UVB1_Annual_Mean_UV-B.asc")
 
 print(UVB_data)

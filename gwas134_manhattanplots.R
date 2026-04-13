@@ -205,3 +205,5 @@ dd <- read.csv("/users/radha/Downloads/GWAS_csv/fullRange_pheno.nodeOfFlower_ful
 
 manhattan.plot(dd$chr, dd$ps, dd$p_score)
 
+
+   

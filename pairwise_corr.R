@@ -11,9 +11,9 @@ library(viridis)
 library(ggpubr)
 
 #Read in UV data 
-UV_ORCC <- readRDS("/users/radha/Documents/Blackman Lab/Scripts/ORCC_UV_full.rds")
+UV_ORCC <- readRDS("/Users/radha/Documents/blackman_lab/ORCC_UV_full.rds")
 #Grouped environmental data
-ORCC_env <- read.csv("/users/radha/Documents/Blackman Lab/data/bcbcm327_7099_PCG.csv")
+ORCC_env <- read.csv("/users/radha/Documents/Blackman Lab/data/Environmental Data/bcbcm327_7099_PCG.csv")
 #Ungrouped environmental data
 ungrouped_env <- 
   read.csv("/users/radha/Documents/Blackman Lab/data/Environmental Data/USE_env-330_bioclim_elevation_230411_sorted.csv")

@@ -9,7 +9,7 @@ library(ggfortify)
 
 #Read in UV data 
 UV_ORCC <- readRDS("/users/radha/Documents/Blackman Lab/Scripts/ORCC_UV_full.rds")
-UV_qual <- readRDS("/users/radha/Documents/Blackman Lab/Scripts/UV_qual.rds")
+UV_qual <- readRDS("/users/radha/Documents/blackman_lab/UV_qual.rds")
 
 #Scale each of the variables to have a mean of 0 and a standard deviation of 1.
 #Calculate the covariance matrix for the scaled variables.

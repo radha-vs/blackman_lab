@@ -5,9 +5,10 @@ library(tidyverse)
 library(ggplot2)
 library(readr)
 library(ggpmisc)
+library(viridis)
 
 #Check that all UV measurement files are included and correctly named
-setwd("/Users/radha/Downloads/UV_ORCC_CSV")
+setwd("/Users/radha/Documents/Blackman Lab/output/UV_ORCC_CSV")
 files_names <- list.files(path = ".", pattern = "*.csv", recursive = T, full.names = TRUE)
 files_names
 
@@ -123,7 +124,7 @@ ggsave("Lateral_comp.jpeg")
 
 #Import qualitative data, create frequency plots w/ dorsal, ventral, and lateral lobes
 
-UV_qual <- read.csv("/Users/radha/Documents/Blackman Lab/UV_ORCC_Qualitative Phenotyping.csv")
+UV_qual <- read.csv("/Users/radha/Documents/Blackman Lab/output/UV_ORCC_Qualitative Phenotyping.csv")
   
 # Function to generate a unique identifier for a given (V, D, L) combination
   generate_identifier <- function(Ventral.Lobe, Dorsal.Lobes, Lateral.Lobes) {
@@ -146,20 +147,36 @@ UV_qual <- UV_qual %>%
   select(Population, FULL.NAME, Ventral.Lobe, Dorsal.Lobes, Lateral.Lobes, Identifier) %>%
   drop_na() 
 
+UV_qual %>%
+  mutate (Phenotype = paste(Ventral.Lobe, Dorsal.Lobes, Lateral.Lobes)) -> UV_qual         
+
+
+#Dataframe of frequencies
+
+UV_qual |>
+  group_by(Phenotype) |>
+  summarize(Frequency = n()) |>
+  mutate(Freq = (Frequency/(sum(Frequency)))) -> UV_qual_freqs
+
 #Plot frequencies of UV qual data 
 
 UV_qual |>
-  group_by(Identifier) |>
+  group_by(Phenotype) |>
   summarize(Frequency = n()) |>
   mutate(Freq = (Frequency/(sum(Frequency)))) |>
-  ggplot(aes(x = factor(Identifier), y = Freq)) +
-  geom_col(fill = "navyblue") + 
-  labs(x = "Identifier", y = "Total Frequency") + 
-  annotate(geom = "text", x = 12, y = 0.56, label = "3 2 2") + 
-  annotate(geom = "text", x = 3, y = 0.2, label = "1 2 2") +
-  annotate(geom = "text", x = 6, y = 0.12, label = "2 2 2") +
-  annotate(geom = "text", x = 1, y = 0.06, label = "1 1 1") + 
-  annotate(geom = "text", x = 14, y = 0.06, label = "3 3 3")
+  ggplot(aes(x = Phenotype, y = Freq)) +
+  geom_col(fill = "#21918c") +
+  theme_bw() +
+  labs(x = "Phenotype (Ventral, Dorsal, Lateral)", y = "Total Frequency", title = "Frequency of UV Phenotypes") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))#+ 
+  #annotate(geom = "text", x = 12, y = 0.56, label = "3 2 2", size = 4) + 
+  #annotate(geom = "text", x = 3, y = 0.2, label = "1 2 2", size = 4) +
+ # annotate(geom = "text", x = 6, y = 0.12, label = "2 2 2", size = 4) +
+ # annotate(geom = "text", x = 1, y = 0.06, label = "1 1 1", size = 4) + 
+ # annotate(geom = "text", x = 14, y = 0.06, label = "3 3 3", size = 4)
+
+
+ggsave("Phenotype_frequencies.jpg")
 
 #Create scatterplots of qualitative vs quantitative analysis: 
 
@@ -173,8 +190,11 @@ UV_qual_quant <- full_df %>%
 
 UV_qual_quant %>%
   ggplot(aes(x= factor(Ventral.Lobe), y= Ventral)) +
-  geom_jitter(color = "navyblue") + 
-  labs(x = "Ventral Identifier", y = "Ventral Lobe Reflectance", title = "Comparison of Ventral Qualitative and Quantitative Measurements")
+  geom_jitter(color = "#3b528b") +
+  theme_bw() +
+  labs(x = "Ventral Phenotype", y = "Ventral Reflectance", title = "Ventral Quantitative vs Qualitative Phenotypes")
+
+ggsave("Ventral_qualvsquant.jpg")
 
 UV_qual_quant %>%
   mutate(dorsal_avg = (R_Dorsal + L_Dorsal)/2) %>%
