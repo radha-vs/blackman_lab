@@ -5,7 +5,7 @@ library(ggplot2)
 library(dplyr)
 library(stringr)
 library(maps)
-
+library(ordinal)
 
 #plotting fun temperature map
 ORCC_bioclim %>%
@@ -83,16 +83,17 @@ UV_qual %>%
   left_join(UV_full, by = "Population") -> UV_complete
 
 UV_complete %>%
-  mutate(Maternal_Line = str_extract(FULL.NAME, "^[^_]+_[^_]+")) -> UV_complete
+ mutate(Maternal_Line = str_extract(FULL.NAME, "^[^_]+_[^_]+")) -> UV_complete
+        #, 
+#         complete = Ventral + R_Lateral + L_Lateral + R_Dorsal + L_Dorsal + Ventral_Throat) -> UV_complete
 
-UV_complete %>%
-  filter(Population == "YVO") -> UV_complete
+#UV_complete %>%
+#  filter(Population == "YVO") -> UV_complete
 
 #Population != "LRD" & Population != "YVO" & Population != "MUG"  & Population != "WNR"
 
 UV_complete %>%
-  #group_by(Maternal_Line) %>%
-  group_by(FULL.NAME) %>%
+  group_by(Maternal_Line, Population) %>%
   #drop_na() %>%
   summarize(Ventral = mean(Ventral), 
             L_Dorsal = mean(L_Dorsal),
@@ -111,7 +112,8 @@ UV_complete %>%
             Identifier = mean(Identifier)) -> mean_quants
 
 mean_quants %>%
-  ggplot(aes(x= log(Identifier), y= Elevation)) + 
+  #filter(Population != "WKY", Population != "YVO", Population != "LRD") %>%
+  ggplot(aes(x= Ventral_Phenotype, y= UVB1)) + 
   geom_jitter() + 
   geom_smooth(method = lm, se = FALSE) +
   stat_cor(method = "pearson") +
@@ -140,7 +142,7 @@ pivot_longer(
 
 pivot_longer(
   mean_quants,
-  cols = c(Ventral_Phenotype, Identifier),
+  cols = c(Identifier),
   #cols = c(Identifier),
   names_to = "Scoring",
   values_to = "Value") -> mean_quals_long
@@ -152,25 +154,78 @@ mean_quants_long %>%
   #  , "avg_rlateral" , "avg_throat") %>%
   ggplot(aes(x= log(Value), y = bio17, color = `Quantitative Measurements`)) +
   geom_jitter() +
-  scale_color_viridis(discrete=TRUE, option = "viridis", begin = 0.7, end = 1) +
+  scale_color_viridis(discrete=TRUE, option = "viridis", begin = 0, end = 0.5) +
   geom_smooth(method = lm, se = FALSE) +
-  #stat_cor(method = "pearson")+
+  stat_cor(method = "pearson")+
   labs(title = "Dry Season Precipitation vs UV Reflectance", 
-       x = "UV Reflectance (log transformed)", 
+       x = "Quantitative UV Reflectance (log transformed)", 
        y = "Precipitation in Driest Quarter (mm)") +
   theme_bw()
+
+#UV-B Irradiance (W/m2/mm)
 
 ggsave("bio17_vs_quant.jpg")
 
 mean_quals_long %>%
-  ggplot(aes(x= log(Value), y = bio17, color = `Scoring`)) +
+  ggplot(aes(x= Value, y = bio17, color = `Scoring`)) +
   geom_jitter() +
-  scale_color_viridis(discrete=TRUE, begin = 0.8, end = 0) +
+  scale_color_viridis(discrete=TRUE, begin = 0.75, end = 0) +
   geom_smooth(method = lm, se = FALSE) +
- # stat_cor(method = "pearson")+
-  labs(title = "Dry Season Precipitation vs UV Reflectance", 
-       x = "Qualitative Phenotype Score (log transformed)", 
+  #stat_cor(method = "pearson")+
+  labs(title = "Dry Season Precipitation vs Qualitative Phenotype", 
+       x = "Composite Qualitative Phenotype", 
        y = "Precipitation in Driest Quarter (mm)") +
   theme_bw()
 
 ggsave("bio17_vs_qual.jpg")
+
+
+#Redoing qualitative regression with ordinal logistic reg
+UV_complete$Identifier <- factor(UV_complete$Identifier, ordered = TRUE) 
+
+qual_assoc_UVB <- clm(Identifier ~ UVB1, data = UV_complete)
+
+summary(qual_assoc_UVB)
+# Coefficients:
+#   Estimate Std. Error z value Pr(>|z|)    
+# UVB1 -2.065e-03  2.061e-05  -100.2   <2e-16 ***
+#   ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Threshold coefficients:
+#   Estimate Std. Error z value
+# 1|2 -7.59286    0.06593  -115.2
+# 2|3 -6.75122    0.06399  -105.5
+# (53 observations deleted due to missingness)
+
+newdata <- data.frame(
+  UVB1 = seq(min(ordered_qual$UVB1, na.rm = TRUE),
+             max(ordered_qual$UVB1, na.rm = TRUE),
+             length.out = 100))
+
+preds <- predict(qual_assoc_UVB, newdata = newdata, type = "prob")
+
+pred_df <- cbind(newdata, preds$fit) %>%
+  pivot_longer(
+    cols = -UVB1,
+    names_to = "Category",
+    values_to = "Probability"
+  )
+
+ggplot(pred_df, aes(x = UVB1, y = Probability, color = Category)) +
+  geom_line(size = 1.2) +
+  labs(
+    title = "Ordinal Regression: Predicted Probabilities",
+    x = "UVB1",
+    y = "Probability"
+  ) +
+  theme_minimal()
+     
+
+ggplot() +
+  geom_jitter(data = ordered_qual,
+              aes(x = UVB1, y = as.numeric(Ventral_Phenotype)),
+              height = 0.05, alpha = 0.4) +
+  geom_line(data = pred_df,
+            aes(x = UVB1, y = Probability * 3, color = Category),
+            size = 1.2)

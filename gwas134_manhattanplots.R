@@ -201,7 +201,7 @@ manhattan.plot<-function(chr, pos, pvalue,
   );
 }
 
-dd <- read.csv("/users/radha/Downloads/GWAS_csv/fullRange_pheno.nodeOfFlower_fullRange.assoc.csv", header = TRUE)
+dd <- read.csv("fullRange_pheno.UVpattern_fullRange.assoc.csv.csv", header = TRUE)
 
 manhattan.plot(dd$chr, dd$ps, dd$p_score)
 
